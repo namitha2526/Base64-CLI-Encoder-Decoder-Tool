@@ -1,16 +1,17 @@
 BASE64_TABLE="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-def base62_encode(data:bytes)-> str:
-  bits=""
-  for byte in data:
-    bits += f"{byte:08b}"
-  while len(bits) % 6 != 0:
-    bits += "0"
-  encoded = " "
-  for i in range(0,len(bits),6):
-    chunk = bits[i:i+6]
-    value = int(chunk, 2)
-    encoded += BASE64_TABLE[value]
-    
-  padding = (3 - len(data) % 3) % 3
-  encoded += "=" * padding
-  return encoded
+def base62_encode(data: bytes) -> str:
+  result = []
+  for i in range(0,len(data),3):
+    block = data[i:i+3]
+    buffer = 0
+    for b in block:
+      buffer = (buffer << 8) | b
+    missing_bytes = 3 - len(block)
+    buffer <<= (missing_bytes * 8)
+    for shift in range (18,-1,-6):
+      index = (buffer >> shift) & 0b111111
+      result.append(BASE64_TABLE[index])
+    if missing_bytes:
+      result[-missing_bytes:] = "=" * missing_bytes
+  return "".join(result)
+   
